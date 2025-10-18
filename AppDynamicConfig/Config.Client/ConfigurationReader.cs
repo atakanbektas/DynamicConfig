@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Config.Client;
@@ -10,19 +12,37 @@ public sealed class ConfigurationReader : IDisposable
     private readonly int _refreshMs;
     private readonly CancellationTokenSource _cts = new();
     private readonly IMongoCollection<Doc> _col;
-    private ImmutableDictionary<string, Doc> _cache = ImmutableDictionary<string, Doc>.Empty;
 
-    public ConfigurationReader(string applicationName, string connectionString, int refreshTimerIntervalInMs)
+    private ImmutableDictionary<string, Doc> _cache =
+        ImmutableDictionary.Create<string, Doc>(StringComparer.OrdinalIgnoreCase);
+
+    private readonly Action<string>? _log;
+
+    public ConfigurationReader(
+        string applicationName,
+        string connectionString,
+        int refreshTimerIntervalInMs,
+        Action<string>? logger = null)
     {
         _app = applicationName;
         _refreshMs = refreshTimerIntervalInMs;
+        _log = logger;
 
         var cli = new MongoClient(connectionString);
         var db = cli.GetDatabase("configdb");
         _col = db.GetCollection<Doc>("configs");
 
-        Task.Run(RefreshAsync);
-        Task.Run(RefreshLoop);
+        // ILK REFRESH: senkron bekle
+        try
+        {
+            RefreshAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            _log?.Invoke($"[Refresh-INIT-ERROR] {ex}");
+        }
+
+        _ = Task.Run(RefreshLoop);
     }
 
     private async Task RefreshLoop()
@@ -30,14 +50,21 @@ public sealed class ConfigurationReader : IDisposable
         var timer = new PeriodicTimer(TimeSpan.FromMilliseconds(_refreshMs));
         while (await timer.WaitForNextTickAsync(_cts.Token))
         {
-            try { await RefreshAsync(); } catch { /* last good snapshot */ }
+            try { await RefreshAsync(); }
+            catch (Exception ex) { _log?.Invoke($"[Refresh-ERROR] {ex}"); }
         }
     }
 
     private async Task RefreshAsync()
     {
-        var list = await _col.Find(x => x.ApplicationName == _app && x.IsActive)
-                             .ToListAsync(_cts.Token);
+        var list = await _col
+            .Find(x => x.ApplicationName == _app && x.IsActive)
+            .ToListAsync(_cts.Token);
+
+        _log?.Invoke($"[Refresh] app='{_app}' activeCount={list.Count}");
+        if (list.Count > 0)
+            _log?.Invoke("[Keys] " + string.Join(", ", list.Select(z => z.Name)));
+
         var dict = list.ToImmutableDictionary(x => x.Name, StringComparer.OrdinalIgnoreCase);
         Interlocked.Exchange(ref _cache, dict);
     }
@@ -66,6 +93,8 @@ public sealed class ConfigurationReader : IDisposable
 
     private sealed class Doc
     {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; } = default!;
         public string ApplicationName { get; set; } = default!;
         public string Name { get; set; } = default!;

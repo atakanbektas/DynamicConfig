@@ -26,7 +26,7 @@ public sealed class ConfigsController : Controller
         if (!ModelState.IsValid) return View(dto);
         var ok = await _api.UpsertAsync(dto);
         if (!ok) { ModelState.AddModelError("", "Create failed"); return View(dto); }
-        return RedirectToAction(nameof(Index), new { app = dto.ApplicationName });
+        return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Edit(string app, string name)
@@ -34,7 +34,7 @@ public sealed class ConfigsController : Controller
         var list = await _api.ListAsync(app) ?? new();
         var item = list.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
         if (item is null) return NotFound();
-        var dto = new ConfigApiClient.UpsertDto(app, name, item.Type, item.Value, true);
+        var dto = new ConfigApiClient.UpsertDto(app, name, item.Type, item.Value, item.IsActive);
         return View(dto);
     }
 
@@ -44,13 +44,13 @@ public sealed class ConfigsController : Controller
         if (!ModelState.IsValid) return View(dto);
         var ok = await _api.UpsertAsync(dto);
         if (!ok) { ModelState.AddModelError("", "Update failed"); return View(dto); }
-        return RedirectToAction(nameof(Index), new { app = dto.ApplicationName });
+        return RedirectToAction(nameof(Index));
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(string app, string name)
     {
         await _api.DeleteAsync(app, name);
-        return RedirectToAction(nameof(Index), new { app });
+        return RedirectToAction(nameof(Index));
     }
 }
