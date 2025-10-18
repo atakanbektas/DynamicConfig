@@ -1,0 +1,66 @@
+﻿@model Admin.Mvc.Services.ConfigApiClient.UpsertDto
+@{
+    var isEdit = !string.IsNullOrWhiteSpace(Model.Name) && Context.Request.Path.Value!.Contains("Edit");
+    ViewData["Title"] = isEdit ? "Edit Config" : "Create Config";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post" class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Service (Application)</label>
+                <input class="form-control" name="ApplicationName" value="@Model.ApplicationName" placeholder="service-a, service-b..." />
+                <div class="form-text">Boş bırakmayın. Hangi servise ait olduğuna göre filtrelenir.</div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label">Name</label>
+                <input class="form-control" name="Name" value="@Model.Name" placeholder="ör. FeatureX.Enabled"
+                @(isEdit ? "readonly" : null) />
+                @if (isEdit)
+                {
+                    <div class="form-text">Mevcut kaydı düzenlerken ad değiştirilemez.</div>
+                }
+            </div>
+
+            <div class="col-md-4">
+                <label class="form-label">Type</label>
+                <select class="form-select" name="Type">
+                    <option value="string" selected="@("string"==Model.Type)">string</option>
+                    <option value="int" selected="@("int"==Model.Type)">int</option>
+                    <option value="double" selected="@("double"==Model.Type)">double</option>
+                    <option value="bool" selected="@("bool"==Model.Type)">bool</option>
+                </select>
+            </div>
+
+            <div class="col-md-8">
+                <label class="form-label">Value</label>
+                <input class="form-control" name="Value" value="@Model.Value" placeholder="Değer" />
+            </div>
+
+            <div class="col-12">
+                <div class="form-check">
+                    <!-- unchecked durumda false gitsin diye önce hidden -->
+                    <input type="hidden" name="IsActive" value="false" />
+                    <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : null) />
+                    <label class="form-check-label" for="IsActive">Aktif</label>
+                </div>
+            </div>
+
+            <div class="col-12 d-flex justify-content-between mt-2">
+                <a class="btn btn-outline-secondary"
+                   href="@Url.Action("Index","Configs", new { app = Model.ApplicationName })">
+                    ← Cancel
+                </a>
+
+                <button type="submit" class="btn btn-primary">
+                    @(isEdit ? "Save Changes" : "Create")
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>

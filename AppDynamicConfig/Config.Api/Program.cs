@@ -1,44 +1,45 @@
+using Config.Application.Commands;
+using Config.Application.DTOs;
+using Config.Application.Queries;
+using Config.Persistence;
+using MediatR;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssemblyContaining<ListByAppQuery>());
+
+// Mongo conn: appsettings veya env
+var mongoConn = builder.Configuration["Mongo:ConnectionString"]
+                ?? Environment.GetEnvironmentVariable("Mongo__ConnectionString")
+                ?? "mongodb://mongo:27017";
+
+builder.Services.AddPersistence(mongoConn);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-app.UseHttpsRedirection();
+// GET: aktif kayýtlar
+app.MapGet("/api/configs", async (string? app, string? q, IMediator m, CancellationToken ct) =>
+    Results.Ok(await m.Send(new ListByAppQuery(app, q), ct))
+);
 
-var summaries = new[]
+// POST: upsert
+app.MapPost("/api/configs", async (ConfigDto dto, IMediator m) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
+    await m.Send(new UpsertConfigCommand(dto));
+    return Results.Ok();
+});
 
-app.MapGet("/weatherforecast", () =>
+// DELETE: sil
+app.MapDelete("/api/configs/{appName}/{name}", async (string appName, string name, IMediator m) =>
 {
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+    await m.Send(new DeleteConfigCommand(appName, name));
+    return Results.Ok();
+});
 
 app.Run();
-
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
