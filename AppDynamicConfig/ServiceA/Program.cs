@@ -4,18 +4,16 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        // Not: Docker dışında local çalıştırıyorsan localhost kullan
-        // Docker compose içinde ayrı container’da koşacaksan "mongodb://mongo:27017"
+
         var connectionString = "mongodb://localhost:27017";
 
         using var reader = new ConfigurationReader(
             applicationName: "SERVICE-A",
             connectionString: connectionString,
-            refreshTimerIntervalInMs: 3000
+            refreshTimerIntervalInMs: 5000
         );
 
-        // İzlemek istediğin key’leri burada tanımla
-        // (Sadece GetValue<T> kullanılacak; hepsini string olarak çekeriz)
+
         string[] keys =
         {
             "MaxItemCount",
@@ -41,7 +39,7 @@ class Program
             }
 
             Console.WriteLine(); // boş satır
-            await Task.Delay(5000); // 5 sn
+            await Task.Delay(10000); // 10 sn
         }
     }
 }

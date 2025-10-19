@@ -32,7 +32,6 @@ public sealed class ConfigurationReader : IDisposable
         var db = cli.GetDatabase("configdb");
         _col = db.GetCollection<Doc>("configs");
 
-        // ILK REFRESH: senkron bekle
         try
         {
             RefreshAsync().GetAwaiter().GetResult();
@@ -91,23 +90,6 @@ public sealed class ConfigurationReader : IDisposable
         object boxed = ConvertBoxed(d.Type, d.Value);
         return (T)Convert.ChangeType(boxed, typeof(T), CultureInfo.InvariantCulture)!;
     }
-
-
-    //public T GetValue<T>(string key)
-    //{
-    //    if (!_cache.TryGetValue(key, out var d))
-    //        throw new KeyNotFoundException($"Config key not found: '{key}' for '{_app}'.");
-
-    //    object boxed = d.Type switch
-    //    {
-    //        "string" => d.Value,
-    //        "int" => int.Parse(d.Value, CultureInfo.InvariantCulture),
-    //        "double" => double.Parse(d.Value, CultureInfo.InvariantCulture),
-    //        "bool" => (d.Value == "1" || bool.Parse(d.Value)),
-    //        _ => throw new InvalidOperationException($"Unsupported type '{d.Type}'")
-    //    };
-    //    return (T)Convert.ChangeType(boxed, typeof(T), CultureInfo.InvariantCulture)!;
-    //}
 
     public void Dispose()
     {
