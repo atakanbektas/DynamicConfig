@@ -1,70 +1,154 @@
 ﻿@model Admin.Mvc.Services.ConfigApiClient.UpsertDto
 @{
-    var isEdit = !string.IsNullOrWhiteSpace(Model.Name) && Context.Request.Path.Value!.Contains("Edit");
-    ViewData["Title"] = isEdit ? "Edit Config" : "Create Config";
+	var isEdit = !string.IsNullOrWhiteSpace(Model.Name) && Context.Request.Path.Value!.Contains("Edit");
+	ViewData["Title"] = isEdit ? "Edit Config" : "Create Config";
 }
 
 <h2 class="mb-3">@ViewData["Title"]</h2>
 
 <div class="card shadow-sm">
-    <div class="card-body">
-        <form method="post" class="row g-3">
+	<div class="card-body">
+		<form method="post" class="row g-3">
 
-            <div class="col-md-6">
-                <label asp-for="ApplicationName" class="form-label">Service (Application)</label>
-                <input asp-for="ApplicationName" class="form-control" placeholder="service-a, service-b..." />
-                <span class="form-text">Do not leave blank. It will be filtered based on which service it belongs to.</span>
-            </div>
-            <div class="col-md-6">
-                <label asp-for="Name" class="form-label">Name</label>
+			<div class="col-md-6">
+				<label asp-for="ApplicationName" class="form-label">Service (Application)</label>
+				<input asp-for="ApplicationName" class="form-control" placeholder="service-a, service-b..." />
+				<span class="form-text">Do not leave blank. It will be filtered based on which service it belongs to.</span>
+			</div>
+			<div class="col-md-6">
+				<label asp-for="Name" class="form-label">Name</label>
+				<input asp-for="Name" class="form-control" placeholder="e.g. FeatureX.Enabled" />
 
-                @if (isEdit)
-                {
-                    <!-- Edit ekranında ad değişmesin ama POST’a gitsin diye readonly -->
-                    <input asp-for="Name" class="form-control" placeholder="ör. FeatureX.Enabled" readonly />
-                    <div class="form-text">The name cannot be changed when editing an existing record.</div>
-                }
-                else
-                {
-                    <!-- Create ekranı -->
-                    <input asp-for="Name" class="form-control" placeholder="e.g. FeatureX.Enabled" />
-                }
-            </div>
-            <div class="col-md-4">
-                <label asp-for="Type" class="form-label">Type</label>
-                <select asp-for="Type" class="form-select">
-                    <option value="string">string</option>
-                    <option value="int">int</option>
-                    <option value="double">double</option>
-                    <option value="bool">bool</option>
-                </select>
-            </div>
+			</div>
+			<div class="col-md-4">
+				<label asp-for="Type" class="form-label">Type</label>
+				<select asp-for="Type" class="form-select" id="TypeSelect">
+					<option value="string">string</option>
+					<option value="int">int</option>
+					<option value="double">double</option>
+					<option value="bool">bool</option>
+				</select>
+			</div>
 
-            <div class="col-md-8">
-                <label asp-for="Value" class="form-label">Value</label>
-                <input asp-for="Value" class="form-control" placeholder="Value" />
-            </div>
+			<div class="col-md-8">
+				<label class="form-label">Value</label>
 
-            <div class="col-12">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : null) />
-                    <input type="hidden" name="IsActive" value="false" />
-                    <label class="form-check-label" for="IsActive">Active</label>
-                </div>
+				<!-- Formun GÖNDERECEĞİ TEK alan -->
+				<input type="hidden" id="ValueHidden" name="Value" value="@Model.Value" />
 
-            </div>
+				<!-- STRING UI -->
+				<div class="value-ui" data-kind="string">
+					<input class="form-control" id="UiValue_string" placeholder="Text" />
+				</div>
 
-            <div class="col-12 d-flex justify-content-between mt-2">
-                <a class="btn btn-outline-secondary"
-                   href="@Url.Action("Index","Configs", new { app = Model.ApplicationName })">
-                    ← Cancel
-                </a>
+				<!-- INT UI -->
+				<div class="value-ui d-none" data-kind="int">
+					<input class="form-control" id="UiValue_int" type="number" step="1" />
+				</div>
 
-                <button type="submit" class="btn btn-primary">
-                    @(isEdit ? "Save Changes" : "Create")
-                </button>
-            </div>
+				<!-- DOUBLE UI -->
+				<div class="value-ui d-none" data-kind="double">
+					<input class="form-control" id="UiValue_double" type="number" step="any" />
+				</div>
 
-        </form>
-    </div>
+				<!-- BOOL UI -->
+				<div class="value-ui d-none" data-kind="bool">
+					<div class="form-check">
+						<input class="form-check-input" id="UiValue_bool" type="checkbox" />
+						<label class="form-check-label" for="UiValue_bool">True / False</label>
+					</div>
+				</div>
+			</div>
+
+
+
+
+
+
+
+			<div class="col-12">
+				<div class="form-check">
+					<input class="form-check-input" type="checkbox" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : null) />
+					<input type="hidden" name="IsActive" value="false" />
+					<label class="form-check-label" for="IsActive">Active</label>
+				</div>
+
+			</div>
+
+			<div class="col-12 d-flex justify-content-between mt-2">
+				<a class="btn btn-outline-secondary"
+				   href="@Url.Action("Index","Configs", new { app = Model.ApplicationName })">
+					← Cancel
+				</a>
+
+				<button type="submit" class="btn btn-primary">
+					@(isEdit ? "Save Changes" : "Create")
+				</button>
+			</div>
+
+		</form>
+	</div>
 </div>
+
+
+@section Scripts {
+	<script>
+		(function () {
+			const typeSel = document.getElementById('TypeSelect');
+			const valueHidden = document.getElementById('ValueHidden');
+			const blocks = Array.from(document.querySelectorAll('.value-ui'));
+
+			const ui = {
+				string: document.getElementById('UiValue_string'),
+				int:    document.getElementById('UiValue_int'),
+				double: document.getElementById('UiValue_double'),
+				bool:   document.getElementById('UiValue_bool')
+			};
+
+			// initial
+			const initialType  = "@Model.Type";
+			const initialValue = "@(Model.Value ?? "")";
+
+			function show(kind) {
+				blocks.forEach(b => b.classList.toggle('d-none', b.dataset.kind !== kind));
+			}
+
+			function hydrateInitial() {
+				// tüm UI’lere mevcut değeri koy
+				ui.string.value = initialValue;
+				ui.int.value    = initialValue;
+				ui.double.value = initialValue;
+
+				const iv = (initialValue || "").trim().toLowerCase();
+				ui.bool.checked = (iv === "true" || iv === "1");
+
+				// seçili tipe göre görünüm
+				show(initialType || typeSel.value);
+			}
+
+			// type değişince görünümü güncelle
+			typeSel.addEventListener('change', function () {
+				show(this.value);
+			});
+
+			// form submit olmadan hemen önce tek hidden’a doğru değeri yaz
+			const form = document.querySelector('form[method="post"]');
+			form.addEventListener('submit', function () {
+				const kind = typeSel.value;
+				if (kind === 'string') {
+					valueHidden.value = ui.string.value ?? "";
+				} else if (kind === 'int') {
+					valueHidden.value = ui.int.value ?? "";
+				} else if (kind === 'double') {
+					valueHidden.value = ui.double.value ?? "";
+				} else if (kind === 'bool') {
+					valueHidden.value = ui.bool.checked ? "true" : "false";
+				}
+			});
+
+			hydrateInitial();
+		})();
+	</script>
+            }
+
+

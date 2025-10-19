@@ -69,21 +69,45 @@ public sealed class ConfigurationReader : IDisposable
         Interlocked.Exchange(ref _cache, dict);
     }
 
+
+
+    public static object ConvertBoxed(string type, string value)
+    {
+        switch (type)
+        {
+            case "string": return value;
+            case "int": return int.Parse(value, CultureInfo.InvariantCulture);
+            case "double": return double.Parse(value, CultureInfo.InvariantCulture);
+            case "bool": return (value == "1" || bool.Parse(value));
+            default: throw new InvalidOperationException($"Unsupported type '{type}'");
+        }
+    }
+
     public T GetValue<T>(string key)
     {
         if (!_cache.TryGetValue(key, out var d))
             throw new KeyNotFoundException($"Config key not found: '{key}' for '{_app}'.");
 
-        object boxed = d.Type switch
-        {
-            "string" => d.Value,
-            "int" => int.Parse(d.Value, CultureInfo.InvariantCulture),
-            "double" => double.Parse(d.Value, CultureInfo.InvariantCulture),
-            "bool" => (d.Value == "1" || bool.Parse(d.Value)),
-            _ => throw new InvalidOperationException($"Unsupported type '{d.Type}'")
-        };
+        object boxed = ConvertBoxed(d.Type, d.Value);
         return (T)Convert.ChangeType(boxed, typeof(T), CultureInfo.InvariantCulture)!;
     }
+
+
+    //public T GetValue<T>(string key)
+    //{
+    //    if (!_cache.TryGetValue(key, out var d))
+    //        throw new KeyNotFoundException($"Config key not found: '{key}' for '{_app}'.");
+
+    //    object boxed = d.Type switch
+    //    {
+    //        "string" => d.Value,
+    //        "int" => int.Parse(d.Value, CultureInfo.InvariantCulture),
+    //        "double" => double.Parse(d.Value, CultureInfo.InvariantCulture),
+    //        "bool" => (d.Value == "1" || bool.Parse(d.Value)),
+    //        _ => throw new InvalidOperationException($"Unsupported type '{d.Type}'")
+    //    };
+    //    return (T)Convert.ChangeType(boxed, typeof(T), CultureInfo.InvariantCulture)!;
+    //}
 
     public void Dispose()
     {
@@ -103,4 +127,7 @@ public sealed class ConfigurationReader : IDisposable
         public bool IsActive { get; set; }
         public DateTime UpdatedAtUtc { get; set; }
     }
+
+
+
 }
