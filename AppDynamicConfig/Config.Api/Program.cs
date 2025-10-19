@@ -23,7 +23,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-// GET: aktif kayýtlar
+// GET: tüm kayýtlar
 app.MapGet("/api/configs", async (string? app, string? q, IMediator m, CancellationToken ct) =>
     Results.Ok(await m.Send(new ListByAppQuery(app, q), ct))
 );

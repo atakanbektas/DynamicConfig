@@ -13,7 +13,7 @@
             <div class="col-md-6">
                 <label asp-for="ApplicationName" class="form-label">Service (Application)</label>
                 <input asp-for="ApplicationName" class="form-control" placeholder="service-a, service-b..." />
-                <span class="form-text">Boş bırakmayın. Hangi servise ait olduğuna göre filtrelenir.</span>
+                <span class="form-text">Do not leave blank. It will be filtered based on which service it belongs to.</span>
             </div>
             <div class="col-md-6">
                 <label asp-for="Name" class="form-label">Name</label>
@@ -22,12 +22,12 @@
                 {
                     <!-- Edit ekranında ad değişmesin ama POST’a gitsin diye readonly -->
                     <input asp-for="Name" class="form-control" placeholder="ör. FeatureX.Enabled" readonly />
-                    <div class="form-text">Mevcut kaydı düzenlerken ad değiştirilemez.</div>
+                    <div class="form-text">The name cannot be changed when editing an existing record.</div>
                 }
                 else
                 {
                     <!-- Create ekranı -->
-                    <input asp-for="Name" class="form-control" placeholder="ör. FeatureX.Enabled" />
+                    <input asp-for="Name" class="form-control" placeholder="e.g. FeatureX.Enabled" />
                 }
             </div>
             <div class="col-md-4">
@@ -42,14 +42,14 @@
 
             <div class="col-md-8">
                 <label asp-for="Value" class="form-label">Value</label>
-                <input asp-for="Value" class="form-control" placeholder="Değer" />
+                <input asp-for="Value" class="form-control" placeholder="Value" />
             </div>
 
             <div class="col-12">
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive" value="true" @(Model.IsActive ? "checked" : null) />
                     <input type="hidden" name="IsActive" value="false" />
-                    <label class="form-check-label" for="IsActive">Aktif</label>
+                    <label class="form-check-label" for="IsActive">Active</label>
                 </div>
 
             </div>

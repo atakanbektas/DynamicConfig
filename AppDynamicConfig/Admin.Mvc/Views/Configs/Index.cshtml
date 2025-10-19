@@ -8,11 +8,11 @@
 <form method="get" class="row g-2 align-items-end mb-3">
     <div class="col-sm-3">
         <label class="form-label">Service (app)</label>
-        <input class="form-control" name="app" value="@app" placeholder="Boş bırakırsan tüm servisler" />
+        <input class="form-control" name="app" value="@app" placeholder="If you leave it blank, all services" />
     </div>
     <div class="col-sm-3">
         <label class="form-label">Name contains</label>
-        <input class="form-control" name="q" value="@q" placeholder="Opsiyonel" />
+        <input class="form-control" name="q" value="@q" placeholder="Optional" />
     </div>
     <div class="col-sm-3">
         <button type="submit" class="btn btn-primary me-2">Filter</button>
@@ -32,7 +32,7 @@
                     <th style="width:26%">Name</th>
                     <th style="width:12%">Type</th>
                     <th style="width:18%">Value</th>
-                    <th style="width:10%">Aktif</th>    @* ✅ yeni *@
+                    <th style="width:10%">Active</th>    @* ✅ yeni *@
                     <th style="width:14%">Updated</th>
                     <th class="text-end" style="width:10%"></th>
                 </tr>
@@ -45,18 +45,21 @@
                         <tr>
                             <td class="text-truncate">@x.ApplicationName</td> @* ✅ Service *@
                             <td class="fw-medium">@x.Name</td>
-                            <td><span class="badge text-bg-secondary text-capitalize">@x.Type</span></td>
+                            <td class="text-truncate">
+                                    @x.Type
+                            </td>
+
                             <td class="text-truncate" style="max-width: 220px;">
                                 <code class="text-body">@x.Value</code>
                             </td>
                             <td>
                                 @if (x.IsActive)
                                 {
-                                    <span class="badge bg-success">Aktif</span>
+                                    <span class="badge bg-success">Active</span>
                                 }
                                 else
                                 {
-                                    <span class="badge bg-secondary">Pasif</span>
+                                    <span class="badge bg-danger">Passive</span>
                                 }
                             </td>
                             <td>
@@ -67,15 +70,15 @@
                                 <div class="btn-group">
                                     <a class="btn btn-sm btn-outline-primary"
                                        href="@Url.Action("Edit","Configs", new { app = x.ApplicationName, name = x.Name })">
-                                        Düzenle
+                                        Edit
                                     </a>
                                     <form method="post"
                                           asp-action="Delete"
                                           asp-controller="Configs"
-                                          onsubmit="return confirm('‘@x.Name’ silinsin mi?')">
+                                          onsubmit="return confirm('‘@x.Name’ will be deleted, are you sure?')">
                                         <input type="hidden" name="app" value="@x.ApplicationName" />
                                         <input type="hidden" name="name" value="@x.Name" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                     </form>
                                 </div>
                             </td>
@@ -87,7 +90,7 @@
                     <tr>
                         <td colspan="7" class="text-center py-5 text-secondary">
                             <div class="mb-2"><i class="bi bi-inboxes fs-3"></i></div>
-                            Kayıt bulunamadı.
+                            Not Found
                         </td>
                     </tr>
                 }
