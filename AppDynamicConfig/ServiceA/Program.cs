@@ -11,16 +11,15 @@ class Program
         using var reader = new ConfigurationReader(
             applicationName: "SERVICE-A",
             connectionString: connectionString,
-            refreshTimerIntervalInMs: 30000 // cache’i 3 sn’de bir tazele
+            refreshTimerIntervalInMs: 3000
         );
 
         // İzlemek istediğin key’leri burada tanımla
         // (Sadece GetValue<T> kullanılacak; hepsini string olarak çekeriz)
         string[] keys =
         {
-            "Age",
+            "MaxItemCount",
             "IsBasketEnabled",
-            "IsPossible",
             "SiteName"
         };
 
